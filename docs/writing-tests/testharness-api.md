@@ -195,14 +195,17 @@ test may begin to execute before the returned promise has settled. Use
 resetting global state that need to happen consistently before the next test
 starts.
 
-`promise_rejects` can be used to test Promises that need to reject:
+`promise_rejects_js` and `promise_rejects_dom` can be used to test
+Promises that need to reject:
 
 ```js
-promise_rejects(test_object, code, promise, description)
+promise_rejects_js(test_object, constructor, promise, description)
 ```
+assert that the promise rejects with a JS Error with the specified constructor.
 
-The `code` argument is equivalent to the same argument to the `assert_throws`
-function.
+`constructor` - the expected exception constructor
+
+`promise` - a promise that should reject
 
 Here's an example where the `bar()` function returns a Promise that rejects
 with a TypeError:
@@ -213,9 +216,25 @@ function bar() {
 }
 
 promise_test(function(t) {
-  return promise_rejects(t, new TypeError(), bar());
+  return promise_rejects_js(t, TypeError, bar());
 }, "Another example");
 ```
+
+```js
+promise_rejects_dom(test_object, type, promise, description)
+```
+assert that the promise rejects with a DOMException of the expected type.
+
+`type` - The expected exception name or code.  See the table of names
+and codes in
+[WebIDL](https://heycam.github.io/webidl/#dfn-error-names-table). If a
+number is passed it should be one of the numeric code values in that
+table (e.g. 3, 4, etc).  If a string is passed it can either be an
+exception name (e.g. "HierarchyRequestError", "WrongDocumentError") or
+the name of the corresponding error code
+(e.g. "HIERARCHY_REQUEST_ERR", "WRONG_DOCUMENT_ERR").
+
+`promise` - a promise that should reject.
 
 ## `EventWatcher` ##
 
@@ -854,19 +873,26 @@ attribute attribute_name following the conditions specified by WebIDL
 ### `assert_readonly(object, property_name, description)`
 assert that property `property_name` on object is readonly
 
-### `assert_throws(code, func, description)`
-`code` - the expected exception. This can take several forms:
+### `assert_throws_js(constructor, func, description)`
+assert that a JS Error with the specified constructor is thrown.
 
-  * string - asserts that the thrown exception must be a DOMException
-             with the given name, e.g., "TimeoutError". (For
-             compatibility with existing tests, the name of a
-             DOMException constant can also be given, e.g.,
-             "TIMEOUT_ERR")
-  * object - asserts that the thrown exception must be any other kind
-             of exception, with a property called "name" that matches
-             `code.name`.
+`constructor` - the expected exception constructor
 
 `func` - a function that should throw
+
+### `assert_throws_dom(type, func, description)`
+assert that a DOMException with the expected type is thrown.
+
+`type` - The expected exception name or code.  See the table of names
+and codes in
+[WebIDL](https://heycam.github.io/webidl/#dfn-error-names-table). If a
+number is passed it should be one of the numeric code values in that
+table (e.g. 3, 4, etc).  If a string is passed it can either be an
+exception name (e.g. "HierarchyRequestError", "WrongDocumentError") or
+the name of the corresponding error code
+(e.g. "HIERARCHY_REQUEST_ERR", "WRONG_DOCUMENT_ERR").
+
+`func` - func Function which should throw.
 
 ### `assert_unreached(description)`
 asserts if called. Used to ensure that some codepath is *not* taken e.g.
