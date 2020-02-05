@@ -1,0 +1,162 @@
+<script src='/resources/testharness.js'></script>
+<script src='/resources/testharnessreport.js'></script>
+<script src="/resources/check-layout-th.js"></script>
+<link rel="author" title="Aleks Totic" href="atotic@chromium.org" />
+<link rel="help" href="https://www.w3.org/TR/css-tables-3/#distributing-width-to-columns" />
+<style>
+  table {
+    background: gray;
+    border-spacing: 8px 8px;
+    width: 300px;
+  }
+  td {
+    padding: 0;
+    background: #BFB;
+    font-size: 10px;
+  }
+  td > div {
+    display: inline-block;
+    background: rgba(56,162,56,0.3);
+  }
+  .error {
+    color: red;
+  }
+  p {
+    margin-top:4px;
+    margin-bottom:4px;
+  }
+  body {
+    counter-reset: testid;      /* Create a chapter counter scope */
+  }
+  .testdesc {
+    white-space: pre-line;
+    margin-top: 16px;
+  }
+  .testdesc:before {
+    content: counter(testid) ". ";
+    counter-increment: testid;  /* Add 1 to chapter */
+  }
+  .testdesc:first-line {
+    font-family: monospace;
+  }
+</style>
+<h1>Compute column computed widths from assignable table width</h1>
+<h2>Test design</h2>
+<p>All examples have border-spacing:8, td.padding:0, table assignable width is 300, unless specified otherwise.</p>
+<p>Table width 300px forces assignable table width >= 300.
+
+<h2>Auto cell distribution</h2>
+
+<p class="testdesc">Assignable:300px C0: Auto/75/75 C1:Auto/25/25
+Non-empty auto cells get surplus width proportionally to their max width.
+Columns.max = 100. Surplus: 300 - 100 = 200.
+C0: 75 + 75/100*200 = 225  C1: 25 + 25/100*200 = 75</p>
+<table style="width:324px" data-expected-width=324>
+  <tr>
+    <td data-expected-width=225><div style="width:75px">75</div></td>
+    <td data-expected-width=75><div style="width:25px">25</div></td>
+  </tr>
+</table>
+<p class="testdesc">Assignable:300px C0: Auto/75/75 C1:Auto/13/25 C2:Auto/0/0
+Empty cells get nothing if there are non-empty auto cells.
+</p>
+<table style="width:332px" data-expected-width=332>
+  <tr>
+    <td data-expected-width=225><div style="width:75px">75</div></td>
+    <td data-expected-width=75><div style="width:13px">13</div><div style="width:12px">12</div></td>
+    <td data-expected-width=0   ></td>
+  </tr>
+</table>
+
+
+<script>
+// Table inspector. Annotates cells with table measures.
+function measureCellMinMax(cell) {
+  let d = document.createElement("div");
+  let clone = cell.cloneNode(true);
+  d.classList.add("measure");
+  for (child of Array.from(clone.childNodes))
+    d.appendChild(child);
+  d.style.width = "min-content";
+  document.body.appendChild(d);
+  let min = d.offsetWidth;
+  d.style.width = "max-content";
+  let max = d.offsetWidth;
+  d.remove();
+  return {min: min, max: max};
+}
+function annotateTable(t) {
+  let tableWidth = t.offsetWidth;
+  let inlineBorderSpacing = parseInt(window.getComputedStyle(t).borderSpacing.split(' ')[0]);
+  let spacing = (2 + t.querySelector("tr").querySelectorAll("td").length - 1)*inlineBorderSpacing;
+  t.setAttribute("title", `Table: ${tableWidth.toFixed(0)} spacing: ${spacing}px`);
+  let firstCell;
+  let totalCellPercent = 0;
+  let nonPercentCellMinWidth = 0;
+  let nonPercentCellMaxWidth = 0;
+  let tableMinWidthByCellPercent = 0;
+  // Spacing assumes column count specified by the 1st row. Assumption might be wrong.
+  let cells = Array.from(t.querySelectorAll("td"));
+  for (let cell of cells) {
+    if (!firstCell)
+      firstCell = cell;
+    let percent = cell.offsetWidth / (tableWidth - spacing) * 100;
+    let minmax = measureCellMinMax(cell);
+    let title = `${cell.offsetWidth.toFixed(1)}px\nmin:${minmax.min}px max:${minmax.max}px ${percent.toFixed(1)}%`;
+    let cssWidth = cell.style.width;
+    let is_percent = cssWidth && cssWidth.match(/\%/);
+    if (is_percent) {
+      let w = parseFloat(cssWidth);
+      totalCellPercent += w;
+      let tableMinWidth = minmax.min / (w / 100);
+      tableMinWidthByCellPercent = Math.max(tableMinWidthByCellPercent, tableMinWidth);
+      title += `\nmin table: ${tableMinWidth.toFixed(0)}px`;
+    } else {
+      nonPercentCellMinWidth += minmax.min;
+      nonPercentCellMaxWidth += minmax.max;
+    }
+    title += `\nTable: ${tableWidth.toFixed(0)} spacing: ${spacing}px`;
+    cell.setAttribute("title", title);
+  }
+
+
+  // Display table statistics in first cell.
+  if (firstCell) {
+    let title = firstCell.getAttribute("title");
+    let ruleMatch = 0;
+    if (tableMinWidthByCellPercent != 0) {
+      if ((tableMinWidthByCellPercent + spacing) == tableWidth)
+        ruleMatch += 1;
+      title += `\nTable by rule 1 min : ${tableMinWidthByCellPercent.toFixed(1)}`;
+    } else {
+      title += "\nTable min by single cell percent NA";
+    }
+    if (totalCellPercent > 0) {
+      totalCellPercent = Math.min(totalCellPercent, 100);
+      let minByCellPercent
+    }
+    if (nonPercentCellMinWidth && totalCellPercent > 0) {
+      totalCellPercent = Math.min(totalCellPercent, 100);
+      title += `\nsum%: ${totalCellPercent.toFixed(1)}%; non% min: ${nonPercentCellMinWidth}px; non% max ${nonPercentCellMaxWidth}px`;
+      let tableMinBySum = (totalCellPercent / (100 - totalCellPercent) +1) * nonPercentCellMinWidth;
+      let tableMaxBySum = (totalCellPercent / (100 - totalCellPercent) +1) * nonPercentCellMaxWidth;
+      if (Math.floor((tableMinBySum + spacing)) == Math.floor(tableWidth) ||
+        Math.floor((tableMaxBySum + spacing)) == Math.floor(tableWidth))
+        ruleMatch += 2;
+      title += `\nTable by rule 2 ${totalCellPercent}%; min:${tableMinBySum.toFixed(1)}px; max:${tableMaxBySum.toFixed(1)}px;`;
+    } else {
+      "Table min by % sum not available";
+    }
+    firstCell.setAttribute("title", title);
+    switch(ruleMatch) {
+      case 1: t.classList.toggle('rule1'); break;
+      case 2: t.classList.toggle('rule2'); break;
+      case 3: t.classList.toggle('rule1and2'); break;
+      default: break;
+    }
+  }
+}
+for (let t of Array.from(document.querySelectorAll("table")))
+  annotateTable(t);
+checkLayout("table");
+</script>
