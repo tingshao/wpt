@@ -229,6 +229,7 @@ function setupAndRegisterTests() {
       const maxScroll = scroller.scrollHeight - scroller.clientHeight;
       const timeRange = animation.timeline.timeRange;
       scroller.scrollTop = 0.2 * maxScroll;
+      await waitForNextFrame();
 
       animation.play();
       animation.playbackRate = 0.5;
@@ -269,11 +270,13 @@ function setupAndRegisterTests() {
         return animation.playState == "running"
       });
       scroller.scrollTop = 0.1 * maxScroll;
+      await waitForNextFrame();
 
       // Set playback rate while the animation is playing.
       animation.playbackRate = playbackRate;
 
       scroller.scrollTop = 0.2 * maxScroll;
+      await waitForNextFrame();
 
       assert_times_equal(
         animation.currentTime - 0.1 * timeRange, 0.1 * timeRange * playbackRate,
@@ -295,6 +298,7 @@ function setupAndRegisterTests() {
         return animation.playState == "running"
       });
       scroller.scrollTop = 0.2 * maxScroll;
+      await waitForNextFrame();
 
       assert_times_equal(animation.currentTime, 0.2 * timeRange * playbackRate,
         'The current time should increase two times faster than timeline.');

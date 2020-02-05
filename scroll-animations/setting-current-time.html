@@ -49,6 +49,7 @@
     const scroller = animation.timeline.scrollSource;
     const maxScroll = scroller.scrollHeight - scroller.clientHeight;
     scroller.scrollTop = 0.25 * maxScroll;
+    await waitForNextFrame();
     animation.play();
 
     await animation.ready;
@@ -58,11 +59,12 @@
     });
   }, 'Setting animation current time to null throws TypeError.');
 
-  test(t => {
+  promise_test(async t => {
     const animation = createScrollLinkedAnimation(t);
     const scroller = animation.timeline.scrollSource;
     const maxScroll = scroller.scrollHeight - scroller.clientHeight;
     scroller.scrollTop = 0.25 * maxScroll;
+    await waitForNextFrame();
 
     animation.currentTime = 333;
 
@@ -78,6 +80,7 @@
     const scroller = animation.timeline.scrollSource;
     const maxScroll = scroller.scrollHeight - scroller.clientHeight;
     scroller.scrollTop = 0.25 * maxScroll;
+    await waitForNextFrame();
     animation.play();
 
     await animation.ready;
@@ -96,6 +99,7 @@
     const maxScroll = scroller.scrollHeight - scroller.clientHeight;
     const range = animation.timeline.timeRange;
     scroller.scrollTop = 0.25 * maxScroll;
+    await waitForNextFrame();
     animation.play();
 
     await animation.ready;
@@ -118,6 +122,7 @@
     const maxScroll = scroller.scrollHeight - scroller.clientHeight;
     const range = animation.timeline.timeRange;
     scroller.scrollTop = 0.25 * maxScroll;
+    await waitForNextFrame();
     animation.play();
 
     await animation.ready;
@@ -131,11 +136,12 @@
     );
   }, 'Set animation current time to a negative value.');
 
-  test(t => {
+  promise_test(async t => {
     const animation = createScrollLinkedAnimation(t);
     const scroller = animation.timeline.scrollSource;
     const maxScroll = scroller.scrollHeight - scroller.clientHeight;
     scroller.scrollTop = 0.25 * maxScroll;
+    await waitForNextFrame();
     animation.play();
 
     animation.currentTime = 300;
@@ -150,6 +156,7 @@
     const scroller = animation.timeline.scrollSource;
     const maxScroll = scroller.scrollHeight - scroller.clientHeight;
     scroller.scrollTop = 0.25 * maxScroll;
+    await waitForNextFrame();
     animation.play();
 
     await animation.ready;
@@ -181,6 +188,7 @@
     const scroller = animation.timeline.scrollSource;
     const maxScroll = scroller.scrollHeight - scroller.clientHeight;
     scroller.scrollTop = 0.25 * maxScroll;
+    await waitForNextFrame();
     animation.play();
 
     await animation.ready;
@@ -204,6 +212,7 @@
       " to a time within the range of the animation.");
 
     scroller.scrollTop = 0.7 * maxScroll;
+    await waitForNextFrame();
 
     assert_times_equal(
       animation.startTime,

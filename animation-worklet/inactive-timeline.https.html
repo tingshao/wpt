@@ -69,6 +69,9 @@ function setupAndRegisterTests() {
       // Force relayout.
       scroller.scrollTop;
 
+      // Scroll timeline state is updated on next frame.
+      await waitForNextFrame();
+
       animation.play();
       animationRef.play();
       assert_equals(animation.currentTime, null,
@@ -95,8 +98,9 @@ function setupAndRegisterTests() {
         'timeline is inactive.');
 
       // Make the timeline active.
-      scroller.style.display = ""
+      scroller.style.display = "";
       scroller.scrollTop;
+      await waitForNextFrame();
 
       assert_times_equal(animation.currentTime, 200,
         'Current time must be initialized.');
@@ -113,8 +117,9 @@ function setupAndRegisterTests() {
         'timing should be properly updated.');
 
       // Make the timeline inactive again.
-      scroller.style.display = "none"
+      scroller.style.display = "none";
       scroller.scrollTop;
+      await waitForNextFrame();
 
       assert_times_equal(animation.currentTime, 200,
         'Current time must be the previous current time.');
